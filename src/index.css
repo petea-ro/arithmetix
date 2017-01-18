@@ -87,7 +87,21 @@ header .title{
 .results .label{
 	margin-left: 15px;
 }
+.results .list-group{
+	margin-bottom: 15px;	
+	clear: both;
+}
 .results .list-group-item > .badge{
 	float: none;
 	margin-right: 10px;
+}
+.results .time{
+	color: gray;
+	font-style: italic;
+	float: right;
+	font-size: 12px;
+}
+.results .new{
+	margin-top: 10px;
+	text-align: center;
 }

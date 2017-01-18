@@ -6,36 +6,41 @@ import ResultsPage from './ResultsPage';
 
 const OPERATIONS = ['+','-','x',':'];
 const DIGITS = ['1','2','3','4','5','6','7','8','9'];
-
-const HISTORY = [{"expression":"3 x 4 = 11","result":12,"choices":[10,15,12,7,14],"answer":"11"},{"expression":"6 - 1 = 5","result":5,"choices":[9,6,2,7,5],"answer":"5"},{"expression":"30 : 10 = 3","result":3,"choices":[6,7,4,0,3],"answer":"3"},{"expression":"3 - 1 = 1","result":2,"choices":[1,4,0,5,2],"answer":"1"},{"expression":"15 - 10 = 5","result":5,"choices":[3,4,6,1,5],"answer":"5"},{"expression":"20 : 4 = 5","result":5,"choices":[9,6,7,5,0],"answer":"5"},{"expression":"4 + 5 = 9","result":9,"choices":[6,8,5,10,9],"answer":"9"},{"expression":"9 - 7 = 2","result":2,"choices":[6,2,3,0,1],"answer":"2"},{"expression":"35 : 7 = 5","result":5,"choices":[6,5,4,2,8],"answer":"5"},{"expression":"2 : 2 = 1","result":1,"choices":[3,4,2,5,1],"answer":"1"}];
-
+const PAGES={Welcome:'welcome', Game:'game', Results: 'results'}
 
 class App extends Component {
   constructor(props){
     super(props);
+
     this.config={
       applicationName: 'Arithmetix',
     }
 
     this.state={
-      activePage: 'welcome', //should be 'welcome',
+      activePage: PAGES.Welcome, //should be 'welcome',
       operations:[], //set of operations user has choosed
       numbers:[], //set of numbers user has choosed
       countQuestions: 10,
-      history: [],
-      list:[]
+      totals: [],
+      list:[],
+    }
+  }
+  componentDidMount(){
+    //restore session from local storage if available
+    var current = localStorage.getItem('currentState');
+    if(current){
+      this.setState(JSON.parse(current));
     }
   }
   componentWillMount(){
-    if(this.state.activePage === 'game'){
+    if(this.state.activePage === PAGES.Game){
       this.startTest();
     }
   }
   handleStartNewTest(){
     this.setState({
-      activePage: 'welcome',
-      history:[],
-      questionNo: 0,
+      activePage: PAGES.Welcome,
+      totals:[],
       question: [], 
       list: [],
     });
@@ -87,26 +92,40 @@ class App extends Component {
   }
   startTest(){
     this.setState({
-        'activePage': 'game',
-        'questionNo': 0,
+        'activePage': PAGES.Game,
     })
     this.nextQuestion();
   }
   nextQuestion(){
+
+    //check if it was the last question
+    if(this.state.totals.length >= this.state.countQuestions){
+      this.setState({
+        activePage: PAGES.Results
+      })
+
+      //remove current state from localStorage
+      localStorage.removeItem('currentState');
+
+      //exit from this function
+      return;
+    }
+
     var question = this.generateQuestion();
-    var questionNo = this.state.questionNo || 0;
-    console.log(question, history);
     this.setState({
-      activePage: 'game',
+      activePage: PAGES.Game,
       question: question,
-      questionNo: questionNo+1,
-    })    
+    });
+
+    //save current state in localStorage
+    localStorage.setItem('currentState', JSON.stringify(this.state)); 
   }
   generateQuestion(){
     var op = randomElement(this.state.operations);
     var n1 = parseInt(randomElement(this.state.numbers), 10);
     var n2 = randomInt(1, 11);      
     var result = 0;
+    let n2init;
     if(op === '+'){
       result = n1+n2;
     }
@@ -114,16 +133,16 @@ class App extends Component {
       result = n1*n2;
     }
     if(op === '-'){
-      var n2init = n2;
+      n2init = n2;
       result = n2;
       n2 = n1;
-      n1 = n1+n2init;
+      n1 += n2init;
     }
     if(op === ':'){
-      var n2init = n2;
+      n2init = n2;
       result = n2;
       n2 = n1;
-      n1 = n1*n2init;
+      n1 *= n2init;
     }
     var expression = n1+ ' ' + op + ' ' + n2 + ' =';
     //check for dublicates
@@ -134,8 +153,9 @@ class App extends Component {
       this.state.list.push(expression); //add expression in list
     }
 
-    var choices = this.generateChoices(result);
-    return {expression, result, choices} 
+    var choices = this.generateChoices(result)
+    var start = new Date()
+    return {expression, result, choices, start} 
   }
   generateChoices(result, choices){
     if(!choices){
@@ -155,29 +175,21 @@ class App extends Component {
   }
   handleClickAnswer(e){
     var answer = e.target.value;
-    var history = this.state.history;
+    var totals = this.state.totals;
     var question = this.state.question;
     var result = question.result;
 
     question.expression += ' ' + answer;
     question.answer = answer;
     question.result = result;
+    question.end = new Date();
     
-    history.push(question);
+    totals.push(question);
 
     this.setState({
       question: question,
-      history: history,
+      totals: totals,
     })
-
-    //check if it's  the last question
-    if(history.length >= this.state.countQuestions){
-      this.setState({
-        activePage: 'results'
-      })
-      //exit from this function
-      return;
-    }
 
     //show next page 
     setTimeout(this.nextQuestion.bind(this), 1000);
@@ -185,7 +197,7 @@ class App extends Component {
   }
   render() {
     var content = "";
-    if(this.state.activePage === 'welcome'){
+    if(this.state.activePage === PAGES.Welcome){
       content=<WelcomePage 
                 allOperations={OPERATIONS}
                 allDigits={DIGITS}
@@ -197,17 +209,17 @@ class App extends Component {
                 onClickStart={this.handleClickStart.bind(this)} 
               />
     }
-    if(this.state.activePage ==='game'){
+    if(this.state.activePage ===PAGES.Game){
       content = <GamePage 
                     countQuestions={this.state.countQuestions}
-                    questionNo={this.state.questionNo}
                     question={this.state.question}
+                    questionNo={this.state.list.length}
                     onClickChoice={this.handleClickAnswer.bind(this)}
                 />;
     }
-    if(this.state.activePage === 'results'){
+    if(this.state.activePage === PAGES.Results){
       content = <ResultsPage 
-                  history={this.state.history}
+                  totals={this.state.totals}
                   onStartNewTest={this.handleStartNewTest.bind(this)}
                 />
     }

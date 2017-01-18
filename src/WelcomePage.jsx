@@ -29,7 +29,7 @@ export default class WelcomeScreen extends Component {
 					</div>
 				<div className="container">
 					<hr/>
-					<Alert className="alert alert-warning" messages={this.props.errors}/>			
+					<Alert className="alert alert-danger" messages={this.props.errors}/>			
 					<button 
 						className="btn btn-primary btn-big" 
 						onClick={this.props.onClickStart.bind(this)}
