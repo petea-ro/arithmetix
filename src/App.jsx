@@ -3,10 +3,11 @@ import './App.css';
 import WelcomePage from './WelcomePage';
 import GamePage from './GamePage';
 import ResultsPage from './ResultsPage';
+import HistoryPage from './HistoryPage';
 
 const OPERATIONS = ['+','-','x',':'];
 const DIGITS = ['1','2','3','4','5','6','7','8','9'];
-const PAGES={Welcome:'welcome', Game:'game', Results: 'results'}
+const PAGES={Welcome:'welcome', Game:'game', Results: 'results', History: 'history'}
 
 class App extends Component {
   constructor(props){
@@ -17,7 +18,7 @@ class App extends Component {
     }
 
     this.state={
-      activePage: PAGES.Welcome, //should be 'welcome',
+      activePage: PAGES.Welcome, //should be 'PAGES.Welcome',
       operations:[], //set of operations user has choosed
       numbers:[], //set of numbers user has choosed
       countQuestions: 10,
@@ -35,6 +36,9 @@ class App extends Component {
   componentWillMount(){
     if(this.state.activePage === PAGES.Game){
       this.startTest();
+    }
+    if(this.state.activePage === PAGES.History){
+      this.handleShowHistory();
     }
   }
   handleStartNewTest(){
@@ -106,6 +110,11 @@ class App extends Component {
 
       //remove current state from localStorage
       localStorage.removeItem('currentState');
+
+      //save results in localStorage for history
+      var history = JSON.parse(localStorage.getItem('history')) || [];
+      history.push(this.state.totals);
+      localStorage.setItem('history', JSON.stringify(history));
 
       //exit from this function
       return;
@@ -195,31 +204,47 @@ class App extends Component {
     setTimeout(this.nextQuestion.bind(this), 1000);
 
   }
+  handleShowHistory(){
+    var history = JSON.parse(localStorage.getItem('history')) || []; 
+    this.setState({
+      activePage: PAGES.History,
+      history: history
+    })
+  }
+
   render() {
     var content = "";
     if(this.state.activePage === PAGES.Welcome){
-      content=<WelcomePage 
-                allOperations={OPERATIONS}
-                allDigits={DIGITS}
-                operations={this.state.operations}
-                numbers={this.state.numbers}
-                errors={this.state.errors}
-                onClickOperation={this.handleClickOperation.bind(this)} 
-                onClickDigit={this.handleClickDigit.bind(this)} 
-                onClickStart={this.handleClickStart.bind(this)} 
-              />
+      content = <WelcomePage 
+                  allOperations={OPERATIONS}
+                  allDigits={DIGITS}
+                  operations={this.state.operations}
+                  numbers={this.state.numbers}
+                  errors={this.state.errors}
+                  showHistory={localStorage.hasOwnProperty('history')}
+                  onClickOperation={this.handleClickOperation.bind(this)} 
+                  onClickDigit={this.handleClickDigit.bind(this)} 
+                  onClickStart={this.handleClickStart.bind(this)} 
+                  onShowHistory={this.handleShowHistory.bind(this)}
+                />
     }
     if(this.state.activePage ===PAGES.Game){
       content = <GamePage 
-                    countQuestions={this.state.countQuestions}
-                    question={this.state.question}
-                    questionNo={this.state.list.length}
-                    onClickChoice={this.handleClickAnswer.bind(this)}
+                  countQuestions={this.state.countQuestions}
+                  question={this.state.question}
+                  questionNo={this.state.list.length}
+                  onClickChoice={this.handleClickAnswer.bind(this)}
                 />;
     }
     if(this.state.activePage === PAGES.Results){
       content = <ResultsPage 
                   totals={this.state.totals}
+                  onStartNewTest={this.handleStartNewTest.bind(this)}
+                />
+    }
+    if(this.state.activePage === PAGES.History){
+      content = <HistoryPage 
+                  history={this.state.history}
                   onStartNewTest={this.handleStartNewTest.bind(this)}
                 />
     }
@@ -239,7 +264,6 @@ class App extends Component {
 }
 
 export default App;
-
 
 
 /**

@@ -105,3 +105,28 @@ header .title{
 	margin-top: 10px;
 	text-align: center;
 }
+
+/** history page ***/
+.history h1{
+	margin: 15px 0;
+	text-align: center;
+}
+.history .panel{
+	margin-bottom: 5px;
+}
+.history .panel-body{
+	padding: 10px 15px 0;
+}
+.history .panel-heading{
+	cursor: pointer;
+}
+.history .panel-body li{
+	float: left;
+	width: 50%;
+	display: block;
+}
+.history .time{
+	font-size: 10px;
+	color: #999;
+	margin-left: 10px;
+}

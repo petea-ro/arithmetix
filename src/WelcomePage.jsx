@@ -9,6 +9,13 @@ export default class WelcomeScreen extends Component {
 		var digitButtons = this.props.allDigits.map( (op) => 
 			<CButton onClick={this.props.onClickDigit.bind(this)} key={op} value={op} activeElements={this.props.numbers}/>
 		)
+		var historyBtn = this.props.showHistory ? (
+				<div>
+					<button className="btn btn-link" onClick={this.props.onShowHistory.bind(this)}>
+						Show History
+					</button>
+				</div>
+		) : '';
 		return (
 			<div className="welcome">
 				<div className="color-section">
@@ -18,6 +25,7 @@ export default class WelcomeScreen extends Component {
 						</p>
 					</div>
 				</div>
+
 				<h2>Choose operations you want to learn and test</h2>
 					<div className="btn-group">
 						{operationButtons}
@@ -36,6 +44,7 @@ export default class WelcomeScreen extends Component {
 					>
 						Start Test
 					</button>
+					{historyBtn}
 				</div>
 			</div>
 		);
